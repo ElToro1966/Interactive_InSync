@@ -1,0 +1,13 @@
+Get Data
+- Check for market opening / closing (NYSE)
+- Check connection
+- Alert faults (email / SMS)
+
+Sell
+- Sell on any news (later mod: NLP positive / negative and grade characterization):
+
+Instrument(s) Chooser
+- Use that/those that give the highest confidence.
+
+FOREX Ref Value
+Create a reference value that is a weighted average of all relevant FOREX

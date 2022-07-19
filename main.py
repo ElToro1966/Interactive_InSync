@@ -1,16 +1,45 @@
-# This is a sample Python script.
+# Using IB Gateway and ib_insync to get market data and send it to a Kafka topic with faust
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from ib_insync import *
 
 
-# Press the green button in the gutter to run the script.
+def get_forex(ib_local):
+    contract = Forex('EURUSD')
+    bars = ib_local.reqHistoricalData(
+        contract, endDateTime='', durationStr='30 D',
+        barSizeSetting='1 hour', whatToShow='MIDPOINT', useRTH=True)
+
+    # convert to pandas dataframe:
+    df = util.df(bars)
+    return df
+
+
+def get_futures(ib_local):
+    sub = ScannerSubscription(
+        instrument='FUT.US',
+        locationCode='FUT.GLOBEX',
+        scanCode='TOP_PERC_GAIN')
+
+    scan_data = ib.reqScannerSubscription(sub)
+    scan_data.updateEvent += on_scan_data
+
+    ib_local.sleep(60)
+    ib_local.cancelScannerSubscription(scan_data)
+
+
+def get_stocks(ib_local):
+    sub = ScannerSubscription(
+        instrument=""
+    )
+
+
+def on_scan_data(scandata):
+    print(scandata[0])
+    print(len(scandata))
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    ib = IB()
+    ib.connect("10.0.0.10", 4002, clientId=1)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    get_futures(ib)
