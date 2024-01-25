@@ -3,6 +3,9 @@ Get Data
 - Check connection
 - Alert faults (email / SMS)
 
+Write Data
+- Write to file for check of data amounts (1 trading day)
+
 Sell
 - Sell on any news (later mod: NLP positive / negative and grade characterization):
 
