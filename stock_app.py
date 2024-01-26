@@ -4,6 +4,7 @@ import ib_insync as ibi
 import json
 import configparser
 import os
+from kafka import KafkaProducer
 import logging
 import logging.handlers
 
@@ -17,7 +18,7 @@ def get_config(cfg_file):
     config = configparser.ConfigParser()
     try:
         config.read(get_path_to_cwd(cfg_file))
-    except OSError:
+    except OSError as e:
         print("Configuration-file not found. Exiting.")
         exit(1)
     return config
@@ -25,8 +26,12 @@ def get_config(cfg_file):
 
 def get_contracts():
     contracts_file = get_path_to_cwd("contracts.json")
-    with open(contracts_file, "r") as f:
-        contracts = json.load(f)
+    try:
+        with open(contracts_file, "r") as f:
+            contracts = json.load(f)
+    except OSError as e:
+        print("Contracts-file not found. Exiting.")
+        exit(1)
     contracts_ibi = [
         ibi.Stock(symbol, contracts["exchange"], contracts["currency"])
         for symbol in contracts["symbols"]
@@ -41,26 +46,33 @@ class App:
         self.host = config_file["ib_gateway"]["host"]
         self.port = int(config_file["ib_gateway"]["port"])
         self.client_id = int(config_file["ib_gateway"]["client_id"])
+        self.kafka_broker_address = config_file["kafka_broker"]["address"]
+        self.kafka_broker_topic = config_file["kafka_broker"]["topic"]
+        self.kafka_broker_max_wait = int(config_file["kafka_broker"]["maximum_wait_ms"])
+        self.kafka_broker_max_queue = int(config_file["kafka_broker"]["queue_max_size"])
 
-    async def run(self, save_file=None):
-        save_file = open(save_file, "w")
-        with await self.ib.connectAsync(host=self.host, port=self.port, clientId=self.client_id):
+    async def run(self):
+        kafka_producer = KafkaProducer(
+            bootstrap_servers=[self.kafka_broker_address]
+        )
+        with await self.ib.connectAsync(
+                host=self.host, port=self.port, clientId=self.client_id
+        ):
             for contract in get_contracts():
                 self.ib.reqMktData(contract)
 
             async for tickers in self.ib.pendingTickersEvent:
                 for ticker in tickers:
                     print(ticker)
-                    save_file.write(str(ticker))
+                    kafka_producer.send(self.kafka_broker_topic, str(ticker).encode())
 
     def stop(self):
         self.ib.disconnect()
 
 
 config_file = get_config("config.ini")
-data_store = config_file["database"]["save_file"]
 app = App()
 try:
-    asyncio.run(app.run(data_store))
+    asyncio.run(app.run())
 except (KeyboardInterrupt, SystemExit):
     app.stop()
