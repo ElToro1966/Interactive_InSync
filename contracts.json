@@ -1,22 +1,5 @@
 {
   "exchange": "SMART",
-  "currency": "USD",
-  "symbols": [
-    "BHP",
-    "DECK",
-    "INVH",
-    "LMT",
-    "MA",
-    "NSC",
-    "ORCL",
-    "PFE",
-    "RTX",
-    "UNP",
-    "WM"
-  ]
-},
-{
-  "exchange": "CSE",
   "currency": "CAD",
   "symbols": [
     "RCI.B",

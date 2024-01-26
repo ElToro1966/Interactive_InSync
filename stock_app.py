@@ -23,6 +23,17 @@ def get_config(cfg_file):
     return config
 
 
+def get_contracts():
+    contracts_file = get_path_to_cwd("contracts.json")
+    with open(contracts_file, "r") as f:
+        contracts = json.load(f)
+    contracts_ibi = [
+        ibi.Stock(symbol, contracts["exchange"], contracts["currency"])
+        for symbol in contracts["symbols"]
+    ]
+    return contracts_ibi
+
+
 class App:
 
     def __init__(self):
@@ -33,19 +44,8 @@ class App:
 
     async def run(self, save_file=None):
         save_file = open(save_file, "w")
-        print(self.host, self.port, self.client_id)
         with await self.ib.connectAsync(host=self.host, port=self.port, clientId=self.client_id):
-            '''
-            contracts = [
-                ibi.Stock(symbol, 'SMART', 'USD')
-                for symbol in ['BHP', 'DECK', 'INVH', 'LMT', 'MA', 'NSC', 'ORCL',
-                               'PFE', 'RTX', 'UNP', 'WM']]
-            '''
-            contracts = [
-                ibi.Stock(symbol, 'SMART', 'CAD')
-                for symbol in ['AC','RCI.A','RCI.B']
-            ]
-            for contract in contracts:
+            for contract in get_contracts():
                 self.ib.reqMktData(contract)
 
             async for tickers in self.ib.pendingTickersEvent:
