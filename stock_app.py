@@ -30,18 +30,17 @@ def get_contracts():
         with open(contracts_file, "r") as f:
             contracts = json.load(f)
     except OSError as e:
+        logging.error(e)
         print("Contracts-file not found. Exiting.")
         exit(1)
     contracts_ibi = []
     for contracts_per_exchange in contracts["exchanges"]:
-        print(contracts_per_exchange)
         contracts_ibi.extend(
             [ibi.Stock(symbol, contracts_per_exchange["name"],
                        contracts_per_exchange["currency"])
              for symbol in contracts_per_exchange["symbols"]
             ]
         )
-    print(contracts_ibi)
     return contracts_ibi
 
 
@@ -56,21 +55,39 @@ class App:
         self.kafka_broker_topic = config_file["kafka_broker"]["topic"]
         self.kafka_broker_max_wait = int(config_file["kafka_broker"]["maximum_wait_ms"])
         self.kafka_broker_max_queue = int(config_file["kafka_broker"]["queue_max_size"])
+        self.log_file = get_path_to_cwd(config_file["logging"]["log_file"])
+        self.log_level = config_file["logging"]["log_level"]
+        logging.basicConfig(filename=self.log_file, encoding='utf-8', level=self.log_level)
 
     async def run(self):
-        kafka_producer = KafkaProducer(
-            bootstrap_servers=[self.kafka_broker_address]
-        )
-        with await self.ib.connectAsync(
-                host=self.host, port=self.port, clientId=self.client_id
-        ):
-            for contract in get_contracts():
-                self.ib.reqMktData(contract)
+        try:
+            kafka_producer = KafkaProducer(
+                bootstrap_servers=[self.kafka_broker_address]
+            )
+        except OSError as e:
+            logging.error(e)
+            print("Kafka broker failing. Exiting.")
+            exit(1)
+        try:
+            with await self.ib.connectAsync(
+                    host=self.host, port=self.port, clientId=self.client_id
+            ):
+                for contract in get_contracts():
+                    self.ib.reqMktData(contract)
 
-            async for tickers in self.ib.pendingTickersEvent:
-                for ticker in tickers:
-                    print(ticker)
-                    kafka_producer.send(self.kafka_broker_topic, str(ticker).encode())
+                async for tickers in self.ib.pendingTickersEvent:
+                    for ticker in tickers:
+                        print(ticker)
+                        try:
+                            kafka_producer.send(self.kafka_broker_topic, str(ticker).encode())
+                        except OSError as e:
+                            logging.error(e)
+                            print("Kafka broker failing. Exiting.")
+                            exit(1)
+        except OSError as e:
+            logging.error(e)
+            print("IB Gateway failing. Exiting.")
+            exit(1)
 
     def stop(self):
         self.ib.disconnect()
