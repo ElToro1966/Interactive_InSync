@@ -4,7 +4,7 @@ import ib_insync as ibi
 import json
 import configparser
 import os
-from kafka import KafkaProducer
+from kafka3 import KafkaProducer
 import logging
 import logging.handlers
 
@@ -32,10 +32,16 @@ def get_contracts():
     except OSError as e:
         print("Contracts-file not found. Exiting.")
         exit(1)
-    contracts_ibi = [
-        ibi.Stock(symbol, contracts["exchange"], contracts["currency"])
-        for symbol in contracts["symbols"]
-    ]
+    contracts_ibi = []
+    for contracts_per_exchange in contracts["exchanges"]:
+        print(contracts_per_exchange)
+        contracts_ibi.extend(
+            [ibi.Stock(symbol, contracts_per_exchange["name"],
+                       contracts_per_exchange["currency"])
+             for symbol in contracts_per_exchange["symbols"]
+            ]
+        )
+    print(contracts_ibi)
     return contracts_ibi
 
 

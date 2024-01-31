@@ -1,9 +1,24 @@
 {
-  "exchange": "SMART",
-  "currency": "CAD",
-  "symbols": [
-    "RCI.B",
-    "RCI.A",
-    "AC"
+  "contracts_version": "0.0.1",
+  "exchanges": [
+    {
+      "name": "SMART",
+      "currency": "CAD",
+      "symbols": [
+        "RCI.B",
+        "RCI.A",
+        "AC"
+      ]
+    },
+    {
+      "name": "SMART",
+      "currency": "USD",
+      "symbols": [
+        "ANSS",
+        "BHP",
+        "LMT",
+        "PFE"
+      ]
+    }
   ]
 }
