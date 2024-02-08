@@ -4,7 +4,9 @@ import ib_insync as ibi
 import json
 import configparser
 import os
-from kafka3 import KafkaProducer
+
+from kafka import KafkaProducer
+from kafka import errors as kafka_errors
 import logging
 import logging.handlers
 
@@ -19,19 +21,20 @@ def get_config(cfg_file):
     try:
         config.read(get_path_to_cwd(cfg_file))
     except OSError as e:
-        print("Configuration-file not found. Exiting.")
+        print(f"Configuration-file not found. Error: {e!s}. Exiting.")
         exit(1)
     return config
 
 
 def get_contracts():
-    contracts_file = get_path_to_cwd("contracts.json")
+    contracts_file = get_path_to_cwd(
+        config_file["contracts"]["contracts_file"])
     try:
         with open(contracts_file, "r") as f:
             contracts = json.load(f)
     except OSError as e:
         logging.error(e)
-        print("Contracts-file not found. Exiting.")
+        print(f"Contracts-file not found. Error: {e!s}. Exiting.")
         exit(1)
     contracts_ibi = []
     for contracts_per_exchange in contracts["exchanges"]:
@@ -64,9 +67,9 @@ class App:
             kafka_producer = KafkaProducer(
                 bootstrap_servers=[self.kafka_broker_address]
             )
-        except OSError as e:
+        except kafka_errors.KafkaError as e:
             logging.error(e)
-            print("Kafka broker failing. Exiting.")
+            print(f"Kafka broker failing. Error: {e!s}. Exiting.")
             exit(1)
         try:
             with await self.ib.connectAsync(
@@ -80,13 +83,13 @@ class App:
                         print(ticker)
                         try:
                             kafka_producer.send(self.kafka_broker_topic, str(ticker).encode())
-                        except OSError as e:
+                        except kafka_errors.KafkaError as e:
                             logging.error(e)
-                            print("Kafka broker failing. Exiting.")
+                            print(f"Kafka broker failing. Error: {e!s} Exiting.")
                             exit(1)
         except OSError as e:
             logging.error(e)
-            print("IB Gateway failing. Exiting.")
+            print(f"IB Gateway failing. Error: {e!s}. Exiting.")
             exit(1)
 
     def stop(self):
