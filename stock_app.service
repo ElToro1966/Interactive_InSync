@@ -1,0 +1,14 @@
+[Unit]
+Description=Stock App Service
+After=multi-user.target
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+User=kafkabridge
+ExecStart={{ venv_home }}/bin/python3 {{ venv_home }}/stock_app.py --serve-in-foreground
+Restart=on-abort
+StandardInput=tty-force
+
+[Install]
+WantedBy=multi-user.target
