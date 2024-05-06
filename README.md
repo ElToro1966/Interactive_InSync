@@ -43,10 +43,6 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-Next, install the bridge in the virtual environment:
-
-python setup.py install
-
 Before activating the service, make sure to edit the service file to point to the correct Python
 interpreter and the correct path to the bridge:
 
