@@ -3,21 +3,16 @@
   "exchanges": [
     {
       "name": "SMART",
-      "currency": "CAD",
-      "symbols": [
-        "RCI.B",
-        "RCI.A",
-        "AC"
-      ]
-    },
-    {
-      "name": "SMART",
       "currency": "USD",
       "symbols": [
-        "ANSS",
-        "BHP",
-        "LMT",
-        "PFE"
+        "DDOG",
+        "GTLB",
+        "CIVI",
+        "GAP",
+        "NVDA",
+        "MSFT",
+        "AAPL",
+        "ORCL"
       ]
     }
   ]
