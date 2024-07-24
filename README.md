@@ -1,8 +1,9 @@
-Interactive Brokers to Kafka 
+# Interactive Brokers to Kafka 
+
 Ver. 0.1
 by Eric Eikrem
 
-Introduction
+### Introduction
 
 This is a simple bridge that reads from an Interactive Brokers' gateway and writes to a Kafka topic. 
 It is written in Python and uses the `asyncio`, `ib_insync` and `kafka-python` libraries.
@@ -11,11 +12,11 @@ It may be useful for test deployments, air-gapped setups, and similar. In produc
 access to the cloud, you may be better off using tried and tested solutions with proper redundancy, 
 such as Kafka Connect.
 
-Configuration
+### Configuration
 
 The configuration is done by editing config.ini. See comments in the file for details.
 
-systemd Service
+### systemd Service
 
 The bridge can be run as a service by using systemd. A service file is available for this purpose.
 Edit the service file and place it in /etc/systemd/system. Then run:
@@ -34,7 +35,7 @@ Check the service status:
 
 sudo systemctl status stock_app.service
 
-Virtual Environment
+### Virtual Environment
 
 It is recommended to run the bridge in a virtual environment. To create a virtual environment,
 run the following commands:
@@ -57,7 +58,7 @@ and compare the output to:
 python -m site
 
 
-References
+### References
 
 I have built on the ideas of others, in particular the following:
 
