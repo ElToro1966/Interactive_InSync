@@ -3,3 +3,4 @@ ib-insync==0.9.86
 kafka-python==2.0.2
 nest-asyncio==1.6.0
 numpy==1.26.3
+PyYAML~=6.0.1

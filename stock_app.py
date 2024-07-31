@@ -7,8 +7,7 @@ import os
 
 from kafka import KafkaProducer
 from kafka import errors as kafka_errors
-import logging
-import logging.handlers
+import logger.custom_logger as cl
 
 
 def get_path_to_cwd(filename):
@@ -21,7 +20,8 @@ def get_config(cfg_file):
     try:
         config.read(get_path_to_cwd(cfg_file))
     except OSError as e:
-        print(f"Configuration-file not found. Error: {e!s}. Exiting.")
+        e_msg: str = f"Configuration-file not found. Error: {e!s}. Exiting."
+        logger.error(e_msg)
         exit(1)
     return config
 
@@ -33,8 +33,8 @@ def get_contracts():
         with open(contracts_file, "r") as f:
             contracts = json.load(f)
     except OSError as e:
-        logging.error(e)
-        print(f"Contracts-file not found. Error: {e!s}. Exiting.")
+        e_msg: str = f"Contracts-file not found. Error: {e!s}. Exiting."
+        logger.error(e_msg)
         exit(1)
     contracts_ibi = []
     for contracts_per_exchange in contracts["exchanges"]:
@@ -42,7 +42,7 @@ def get_contracts():
             [ibi.Stock(symbol, contracts_per_exchange["name"],
                        contracts_per_exchange["currency"])
              for symbol in contracts_per_exchange["symbols"]
-            ]
+             ]
         )
     return contracts_ibi
 
@@ -56,11 +56,10 @@ class App:
         self.client_id = int(config_file["ib_gateway"]["client_id"])
         self.kafka_broker_address = config_file["kafka_broker"]["address"]
         self.kafka_broker_topic = config_file["kafka_broker"]["topic"]
-        self.kafka_broker_max_wait = int(config_file["kafka_broker"]["maximum_wait_ms"])
-        self.kafka_broker_max_queue = int(config_file["kafka_broker"]["queue_max_size"])
-        self.log_file = get_path_to_cwd(config_file["logging"]["log_file"])
-        self.log_level = config_file["logging"]["log_level"]
-        logging.basicConfig(filename=self.log_file, encoding='utf-8', level=self.log_level)
+        self.kafka_broker_max_wait = (
+            int(config_file["kafka_broker"]["maximum_wait_ms"]))
+        self.kafka_broker_max_queue = (
+            int(config_file["kafka_broker"]["queue_max_size"]))
 
     async def run(self):
         try:
@@ -68,8 +67,8 @@ class App:
                 bootstrap_servers=[self.kafka_broker_address]
             )
         except kafka_errors.KafkaError as e:
-            logging.error(e)
-            print(f"Kafka broker failing. Error: {e!s}. Exiting.")
+            e_msg: str = f"Kafka broker failing. Error: {e!s}. Exiting."
+            logger.error(e_msg)
             exit(1)
         try:
             with await self.ib.connectAsync(
@@ -84,18 +83,19 @@ class App:
                         try:
                             kafka_producer.send(self.kafka_broker_topic, str(ticker).encode())
                         except kafka_errors.KafkaError as e:
-                            logging.error(e)
-                            print(f"Kafka broker failing. Error: {e!s} Exiting.")
+                            e_msg: str = f"Kafka broker failing. Error: {e!s}. Exiting."
+                            logger.error(e_msg)
                             exit(1)
         except OSError as e:
-            logging.error(e)
-            print(f"IB Gateway failing. Error: {e!s}. Exiting.")
+            e_msg: str = f"IB Gateway failing. Error: {e!s}. Exiting."
+            logger.error(e_msg)
             exit(1)
 
     def stop(self):
         self.ib.disconnect()
 
 
+logger = cl.get_custom_logger(__name__)
 config_file = get_config("config.ini")
 app = App()
 try:
