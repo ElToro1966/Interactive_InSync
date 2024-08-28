@@ -7,7 +7,8 @@ Conflicts=getty@tty1.service
 Type=simple
 User=kafkabridge
 ExecStart={{ venv_home }}/bin/python3 {{ venv_home }}/stock_app.py --serve-in-foreground
-Restart=on-abort
+Restart=always
+RestartSec=15
 StandardInput=tty-force
 
 [Install]
