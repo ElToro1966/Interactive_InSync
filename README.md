@@ -44,6 +44,15 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
+OBS: As per date (Oct. 16, 2024), there is a problem with a kafka library in Python 3.12. You
+have to use 3.11 or earlier to make the app work. Do the following:
+
+me@mydevice:~$ sudo add-apt-repository ppa:deadsnakes/ppa
+me@mydevice:~$ sudo apt update
+me@mydevice:~$ sudo apt install python3.11
+me@mydevice:~$ sudo apt install python3.11-venv
+me@mydevice:~$ mkdir ~/venv
+me@mydevice:~$ python3.11 -m venv ~/venv
 Before activating the service, make sure to edit the service file to point to the correct Python
 interpreter and the correct path to the bridge:
 
