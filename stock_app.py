@@ -61,6 +61,51 @@ class App:
         self.kafka_broker_max_queue = (
             int(config_file["kafka_broker"]["queue_max_size"]))
 
+
+    def ticker_to_json(self, ticker):
+        '''
+        Ticker(contract=Stock(symbol='NVDA', exchange='SMART', currency='USD'), time=datetime.datetime(2024, 10, 21, 11, 59, 48, 692059,
+        tzinfo=datetime.timezone.utc), minTick=0.01, bid=137.07, bidSize=100.0, bidExchange='P', ask=137.12, askSize=900.0, askExchange='KPQZNU',
+        last=137.07, lastSize=100.0, lastExchange='P', prevBid=137.11, prevBidSize=300.0, prevAsk=137.16, prevAskSize=700.0, prevLast=137.11, volume=24854.0,
+        close=138.0, ticks=[TickData(time=datetime.datetime(2024, 10, 21, 11, 59, 48, 692059, tzinfo=datetime.timezone.utc), tickType=0, price=137.07,
+        size=100.0)], bboExchange='9c0001', snapshotPermissions=3)
+
+        '''
+        ticks_data = []
+        for tick in ticker.ticks:
+            tick_data = {
+                'stock_symbol': ticker.contract.symbol,
+                'exchange': ticker.contract.exchange,
+                'currency': ticker.contract.currency,
+                'transaction_time': ticker.time.strftime('%Y-%m-%d %H:%M:%S.%f'),
+                'min_tick': ticker.minTick,
+                'bid': ticker.bid,
+                'bid_size': ticker.bidSize,
+                'bid_exchange': ticker.bidExchange,
+                'ask': ticker.ask,
+                'ask_size': ticker.askSize,
+                'ask_exchange': ticker.askExchange,
+                'last': ticker.last,
+                'last_size': ticker.lastSize,
+                'last_exchange': ticker.lastExchange,
+                'prev_bid': ticker.prevBid,
+                'prev_bid_size': ticker.prevBidSize,
+                'prev_ask': ticker.prevAsk,
+                'prev_ask_size': ticker.prevAskSize,
+                'prev_last': ticker.prevLast,
+                'volume': ticker.volume,
+                'close': ticker.close,
+                'tick_time': tick.time.strftime('%Y-%m-%d %H:%M:%S.%f'),
+                'tick_type': tick.tickType,
+                'tick_price': tick.price,
+                'tic_size': tick.size,
+                'bboExchange': ticker.bboExchange,
+                'snapshot_permissions': ticker.snapshotPermissions
+            }
+            ticks_data.append(tick_data)
+        return ticks_data
+
+
     async def run(self):
         try:
             kafka_producer = KafkaProducer(
@@ -81,7 +126,8 @@ class App:
                     for ticker in tickers:
                         print(ticker)
                         try:
-                            kafka_producer.send(self.kafka_broker_topic, str(ticker).encode())
+                            for tick in self.ticker_to_json(ticker):
+                                kafka_producer.send(self.kafka_broker_topic, json.dumps(tick).encode())
                         except kafka_errors.KafkaError as e:
                             e_msg: str = f"Kafka broker failing. Error: {e!s}. Exiting."
                             logger.error(e_msg)
