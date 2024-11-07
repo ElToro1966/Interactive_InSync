@@ -124,9 +124,9 @@ class App:
 
                 async for tickers in self.ib.pendingTickersEvent:
                     for ticker in tickers:
-                        print(ticker)
                         try:
                             for tick in self.ticker_to_json(ticker):
+                                print(tick)
                                 kafka_producer.send(self.kafka_broker_topic, json.dumps(tick).encode())
                         except kafka_errors.KafkaError as e:
                             e_msg: str = f"Kafka broker failing. Error: {e!s}. Exiting."
